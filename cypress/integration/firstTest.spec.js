@@ -216,7 +216,7 @@ describe("First Test Suite", () => {
         // Also you can use cypress Select
     })
 
-    it.only("Table #1", () => {
+    it("Table #1", () => {
 
         cy.visit('/')
         cy.contains('Tables & Data').click()         
@@ -303,5 +303,90 @@ describe("First Test Suite", () => {
                     }
             })
         })
+    })
+
+    it("Datepickers", () => {
+
+        function selectDayFromCurrent(day) {
+
+            let date = new Date()
+            date.setDate(date.getDate() + day)        
+            let futureDay = date.getDate()
+            let futureMonth = date.toLocaleString('default', {month: 'short'})
+            let dateAssert = futureMonth + ' ' + futureDay+ ', ' + date.getFullYear()
+
+            cy.get('nb-calendar-navigation')
+                .invoke('attr', 'ng-reflect-date')
+                .then(dateAttribute => {
+                    if(!dateAttribute.includes(futureMonth)){
+                        cy.get('[data-name="chevron-right"]').click()
+                        selectDayFromCurrent(day)
+                    } else{
+                        cy.get('nb-calendar-picker [class="day-cell ng-star-inserted"]').contains(futureDay).click()
+                    }
+                })     
+            return dateAssert
+        }
+
+        cy.visit('/')
+        cy.contains('Forms').click()         
+        cy.contains('Datepicker').click()
+
+        cy.contains('nb-card', 'Common Datepicker')
+            .find('input')
+            .then(input => {
+                cy.wrap(input).click()
+                let testDate = selectDayFromCurrent(300)
+
+                cy.wrap(input)
+                    .invoke('prop', 'value')
+                    .should('contain', testDate)
+            })
+    })
+
+    it("Tooltip", () => {
+        
+        cy.visit('/')
+        cy.contains('Modal & Overlays').click()         
+        cy.contains('Tooltip').click()
+
+        cy.contains('nb-card', 'Colored Tooltips')
+            .contains('Default')
+            .click()
+        cy.get('nb-tooltip')
+            .should('contain', 'This is a tooltip')
+    })
+
+    it.only("Dialog (Alerts)", () => {
+        
+        cy.visit('/')
+        cy.contains('Tables & Data').click()         
+        cy.contains('Smart Table').click()
+
+        // Method 1 (Not recommended)
+        // cy.get('tbody tr').first()
+        //     .find('.nb-trash')
+        //     .click()
+        // cy.on('window:confirm', confirm => {
+        //     expect(confirm).to.equal("Are you sure you want to delete?")
+        // })
+
+        // Method 2 
+        // const myStub = cy.stub()
+        // cy.on('window:confirm', myStub)
+        // cy.get('tbody tr').first()
+        //     .find('.nb-trash')
+        //     .click()
+        //     .then(() => {
+        //         expect(myStub.getCall(0)).to.be.calledWith('Are you sure you want to delete?')
+        //     })
+
+        // Method 3
+        cy.get('tbody tr').first()
+            .find('.nb-trash')
+            .click()
+        cy.on('window:confirm', () => false)
+
+
     })
 })
